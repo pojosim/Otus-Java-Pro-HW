@@ -1,6 +1,5 @@
 package otus.hw.test;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -18,19 +17,22 @@ public class TestHolder {
         this.afters = afters;
     }
 
-    public void run() throws InvocationTargetException, IllegalAccessException {
-        for (Method before : befores) {
-            execute(before, instance);
-        }
+    public boolean run() {
+        boolean result;
 
-        execute(test, instance);
+        befores.forEach(before -> execute(before, instance));
+        result = execute(test, instance);
+        afters.forEach(method -> execute(method, instance));
 
-        for (Method method : afters) {
-            execute(method, instance);
-        }
+        return result;
     }
 
-    private void execute(Method method, Object instance) throws InvocationTargetException, IllegalAccessException {
-        method.invoke(instance);
+    private boolean execute(Method method, Object instance) {
+        try {
+            method.invoke(instance);
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
     }
 }

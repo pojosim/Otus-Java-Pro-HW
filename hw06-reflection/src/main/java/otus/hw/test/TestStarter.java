@@ -13,6 +13,12 @@ import java.util.List;
  * Main starter test
  */
 public class TestStarter {
+    Class<?> aClass;
+
+    public TestStarter(Class<?> aClass) {
+        this.aClass = aClass;
+    }
+
     public static void main(String[] args) throws ClassNotFoundException {
         if (args.length == 0)
             throw new RuntimeException("Error, args is null elements");
@@ -20,6 +26,10 @@ public class TestStarter {
         String testClass = args[0];
         Class<?> aClass = Class.forName(TestStarter.class.getPackageName() + "." + testClass);
 
+        new TestStarter(aClass).start();
+    }
+
+    private void start() {
         List<Method> beforeMethods = new ArrayList<>();
         List<Method> afterMethods = new ArrayList<>();
         List<Method> testMethods = new ArrayList<>();
@@ -35,24 +45,23 @@ public class TestStarter {
         }
 
         testMethods.forEach(method -> {
-            try {
-                new TestHolder(ReflectionHelper.instantiate(aClass), method, beforeMethods, afterMethods).run();
+            boolean result = new TestHolder(ReflectionHelper.instantiate(aClass), method, beforeMethods, afterMethods).run();
+            if (result)
                 printPassed(method.getName());
-            } catch (Exception e) {
+            else
                 printError(method.getName());
-            }
         });
     }
 
-    private static void printPassed(String methodName) {
+    private void printPassed(String methodName) {
         print("PASSED", methodName);
     }
 
-    private static void printError(String methodName) {
+    private void printError(String methodName) {
         print("ERROR", methodName);
     }
 
-    private static void print(String status, String methodName) {
+    private void print(String status, String methodName) {
         System.out.printf("method \"%s\" - %s%n", methodName, status);
     }
 }
