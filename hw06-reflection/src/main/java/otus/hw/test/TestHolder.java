@@ -29,35 +29,35 @@ public class TestHolder {
     public boolean run() {
         try {
             befores.forEach(before -> execute(before, instance));
-        } catch (RuntimeException e) {
-            logError(MSG_ERROR_BEFORE, e);
+        } catch (TestException e) {
+            logError(MSG_ERROR_BEFORE);
             return false;
         }
 
         try {
             execute(test, instance);
             return true;
-        } catch (RuntimeException e) {
-            logError(MSG_ERROR_TEST, e);
+        } catch (TestException e) {
+            logError(MSG_ERROR_TEST);
             return false;
         } finally {
             try {
                 afters.forEach(method -> execute(method, instance));
-            } catch (RuntimeException e) {
-                logError(MSG_ERROR_AFTER, e);
+            } catch (TestException e) {
+                logError(MSG_ERROR_AFTER);
             }
         }
     }
 
-    private void execute(Method method, Object instance) {
+    private void execute(Method method, Object instance) throws TestException {
         try {
             method.invoke(instance);
         } catch (InvocationTargetException | IllegalAccessException e) {
-            throw new RuntimeException(e);
+            throw new TestException(e);
         }
     }
 
-    private void logError(String msg, Throwable thrown) {
-        logger.log(Level.WARNING, msg, thrown);
+    private void logError(String msg) {
+        logger.log(Level.WARNING, msg);
     }
 }

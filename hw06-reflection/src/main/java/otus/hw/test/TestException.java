@@ -1,6 +1,10 @@
 package otus.hw.test;
 
-public class TestException extends Exception {
+public class TestException extends RuntimeException {
+
+    public TestException(Throwable cause) {
+        super(cause);
+    }
 
     public TestException(String message) {
         super(message);
