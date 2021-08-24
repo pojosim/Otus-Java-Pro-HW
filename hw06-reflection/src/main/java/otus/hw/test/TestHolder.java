@@ -41,7 +41,11 @@ public class TestHolder {
             logError(MSG_ERROR_TEST, e);
             return false;
         } finally {
-            afters.forEach(method -> execute(method, instance));
+            try {
+                afters.forEach(method -> execute(method, instance));
+            } catch (RuntimeException e) {
+                logError(MSG_ERROR_AFTER, e);
+            }
         }
     }
 
