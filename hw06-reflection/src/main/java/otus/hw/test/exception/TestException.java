@@ -1,4 +1,4 @@
-package otus.hw.test;
+package otus.hw.test.exception;
 
 public class TestException extends RuntimeException {
 
@@ -13,4 +13,9 @@ public class TestException extends RuntimeException {
     public TestException(String message, Throwable cause) {
         super(message, cause);
     }
+
+    public String getMsgError() {
+        return "Error invoke test methods";
+    }
+
 }
