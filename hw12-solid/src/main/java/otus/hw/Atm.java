@@ -1,88 +1,42 @@
 package otus.hw;
 
-import otus.hw.cash.Banknote;
+import otus.hw.exception.AtmException;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.List;
 
-public class Atm<T extends Banknote> implements AdminAccess<T> {
+public interface Atm {
 
-    private final AtmFactory<T> factory;
-    private final Map<T.Nominal, Cassette<T>> cassettes;
+    /**
+     * Operation for dispense cash from ATM
+     *
+     * @param amountCash requested amount
+     * @return List banknotes
+     * @throws AtmException if there are no banknotes available for dispensing
+     */
+    List<Banknote> dispenseCash(int amountCash) throws AtmException;
 
-    public Atm(AtmFactory<T> factory) {
-        this.factory = factory;
-        cassettes = new TreeMap<>(Comparator.comparing(Banknote.Nominal::getAmount));
-    }
+    /**
+     * Operation for accept banknotes into ATM
+     *
+     * @param banknotes list banknotes for replenishment
+     * @return banknotes for which there are no cassettes or there is no space left in the cassettes
+     */
+    List<Banknote> acceptCash(List<Banknote> banknotes);
 
-    public void createCassette(T.Nominal nominal, int currentNumberBanknote) {
-        cassettes.put(nominal, factory.createCassette(nominal, currentNumberBanknote));
-    }
+    /**
+     * Return string format balance in ATM
+     *
+     * @return string balance
+     */
+    String getCashBalance();
 
-    public void putCash(List<T> cash) {
-        cash.stream().collect(Collectors.groupingBy(Banknote::getNominal, Collectors.summingInt(value -> 1)))
-                .forEach((nominal, amount) -> {
-                    Cassette<T> cassette = cassettes.get(nominal);
-                    if (cassette != null) {
-                        cassette.put(amount);
-                    } else {
-                        throw new UnsupportedOperationException("Not found cassette for these banknote nominal - " + nominal);
-                    }
-                });
-    }
+    /**
+     * Return count available banknote
+     * @param denomination type denomination
+     * @return if atm contains type denomination then count else zero
+     */
+    int getAvailableBanknote(Denomination denomination);
 
-    public List<T> getCash(int amountCash) {
-        checkCardinality(amountCash);
-
-        List<T> cash = new ArrayList<>();
-
-        for (Map.Entry<T.Nominal, Cassette<T>> entry : cassettes.entrySet()) {
-            int cassetteNominalAmount = entry.getKey().getAmount();
-
-            if (cassetteNominalAmount > amountCash || amountCash == 0)
-                break;
-
-            Cassette<T> cassette = entry.getValue();
-
-            int remainderBanknote = cassette.getRemainderBankNote();
-            int remainderSum = remainderBanknote * cassetteNominalAmount;
-
-            if (remainderSum < amountCash) {
-                cash.addAll(cassette.get(remainderBanknote));
-                amountCash -= remainderSum;
-            } else {
-                cash.addAll(cassette.get(amountCash/cassetteNominalAmount));
-                amountCash = 0;
-            }
-        }
-
-        if (cash.size() == 0 || amountCash > 0)
-            throw new RuntimeException("Error get cash");
-
-        return cash;
-    }
-
-    public List<T> getAllCash() {
-        return cassettes.values().stream()
-                .map(cassette -> cassette.get(cassette.getRemainderBankNote()))
-                .flatMap(Collection::stream)
-                .collect(Collectors.toList());
-    }
-
-    private void checkCardinality(int numberCash) {
-        if (numberCash % cassettes.entrySet().iterator().next().getKey().getAmount() != 0)
-            throw new RuntimeException("Error get cash");
-    }
-
-    @Override
-    public Map<T.Nominal, Integer> getBalanceAtm() {
-        return cassettes.entrySet().stream().collect(Collectors.toMap(
-                Map.Entry::getKey,
-                entry -> entry.getValue().getRemainderBankNote(),
-                Integer::sum));
-    }
-
-    public AdminAccess<T> getAdminAccess() {
-        return (AdminAccess<T>) this;
-    }
 }
+
+

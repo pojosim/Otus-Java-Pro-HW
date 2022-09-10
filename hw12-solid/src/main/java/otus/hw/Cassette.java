@@ -1,59 +1,66 @@
 package otus.hw;
 
-import otus.hw.cash.Banknote;
-
+import java.util.ArrayDeque;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.Objects;
 
-public class Cassette<T extends Banknote> {
-    private int currentNumberBanknotes;
-    private final T.Nominal nominal;
+public class Cassette implements Comparable<Cassette> {
 
-    private Cassette(Banknote.Nominal nominal, int numberBanknotes) {
-        this.currentNumberBanknotes = numberBanknotes;
-        this.nominal = nominal;
+    private final Denomination denomination;
+    private final ArrayDeque<Banknote> banknotes;
+    private int sizeCassette;
+
+    public Cassette(Denomination denomination, int sizeCassette, List<Banknote> banknotes) {
+        if (banknotes.size() > sizeCassette)
+            throw new IllegalArgumentException("Error, count banknotes more cassette size");
+
+        this.denomination = denomination;
+        this.banknotes = new ArrayDeque<>(sizeCassette);
+        this.banknotes.addAll(banknotes);
+        this.sizeCassette = sizeCassette;
     }
 
-    public void put(int amount) {
-        currentNumberBanknotes += amount;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Cassette cassette = (Cassette) o;
+        return denomination == cassette.denomination;
     }
 
-    public List<T> get(int amount) {
-        if (amount > currentNumberBanknotes)
-            throw new RuntimeException("No so much money");
-
-        currentNumberBanknotes -= amount;
-        return IntStream.range(0, amount).mapToObj(i -> (T) nominal.createBanknote()).collect(Collectors.toList());
+    @Override
+    public int hashCode() {
+        return Objects.hash(denomination);
     }
 
-    public T.Nominal getNominal() {
-        return nominal;
+    @Override
+    public int compareTo(Cassette o) {
+        return Integer.compare(this.denomination.getNum(), o.denomination.getNum());
     }
 
-    public int getRemainderBankNote() {
-        return currentNumberBanknotes;
+    public Denomination getDenomination() {
+        return denomination;
     }
 
-    public static class CassetteBuilder<T extends Banknote> {
-        private int numberBanknotes;
-        private T.Nominal nominal;
+    public int getAvailableBanknote() {
+        return banknotes.size();
+    }
 
-        public CassetteBuilder<T> setNominal(T.Nominal nominal) {
-            this.nominal = nominal;
-            return this;
-        }
+    public boolean isAvailableSpace() {
+        return sizeCassette - banknotes.size() > 0;
+    }
 
-        public CassetteBuilder<T> fillCassette(int amount) {
-            this.numberBanknotes = amount;
-            return this;
-        }
+    public void put(Banknote banknote) {
+        if (banknotes.size() == sizeCassette)
+            throw new RuntimeException("Not available space in cassette");
 
-        public Cassette<T> build() {
-            if (nominal == null || numberBanknotes < 1)
-                throw new RuntimeException("Error build cassette");
+        banknotes.offerLast(banknote);
+    }
 
-            return new Cassette<>(nominal, numberBanknotes);
-        }
+    public Banknote get() {
+        if (banknotes.size() == 0)
+            throw new RuntimeException("Not available banknote");
+
+        return banknotes.pollLast();
     }
 }
