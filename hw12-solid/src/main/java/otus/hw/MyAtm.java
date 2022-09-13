@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 public class MyAtm implements Atm {
 
-    Map<Denomination, Cassette> cassettes;
+    private final Map<Denomination, Cassette> cassettes;
 
     public MyAtm(List<Cassette> cassettes) {
         // form the amount first from large denominations
@@ -17,7 +17,7 @@ public class MyAtm implements Atm {
     }
 
     @Override
-    public synchronized List<Banknote> dispenseCash(int amountCash) throws AtmException {
+    public List<Banknote> dispenseCash(int amountCash) throws AtmException {
         checkAvailableDispense(amountCash);
 
         List<Banknote> retBanknotes = new ArrayList<>();
@@ -62,12 +62,13 @@ public class MyAtm implements Atm {
             }
         }
 
-        if (remainder != 0)
+        if (remainder != 0) {
             throw new AtmException("This amount cannot be dispense");
+        }
     }
 
     @Override
-    public synchronized List<Banknote> acceptCash(List<Banknote> acceptBanknotes) {
+    public List<Banknote> acceptCash(List<Banknote> acceptBanknotes) {
         if (acceptBanknotes == null || acceptBanknotes.isEmpty()) {
             throw new IllegalArgumentException();
         }
